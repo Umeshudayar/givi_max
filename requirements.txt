@@ -1,0 +1,24 @@
+# Flask Backend
+flask==3.0.0
+flask-cors==4.0.0
+
+# Machine Learning Models (UPDATED - Latest compatible versions)
+tensorflow>=2.16.0  # Use latest available version
+scikit-learn==1.4.0
+
+# Data Processing
+pandas==2.2.0
+numpy==1.26.0
+
+# Geocoding and Distance Calculation (No API Key Required!)
+geopy==2.4.1
+requests==2.31.0
+
+# Model Serialization (built-in with Python, but good to have)
+# pickle is built-in
+
+# Optional: For better performance
+gunicorn==21.2.0
+
+# Development
+python-dotenv==1.0.0

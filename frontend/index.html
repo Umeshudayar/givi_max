@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Givi - Delivery Time Prediction</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,7 +22,6 @@
             min-height: 100vh;
         }
         
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -65,7 +66,6 @@
             color: #fff;
         }
         
-        /* Hero Section */
         .hero {
             text-align: center;
             padding: 80px 40px 60px;
@@ -100,23 +100,23 @@
             margin: 0 auto;
         }
         
-        /* Main Content */
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 40px 60px;
             display: grid;
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: 450px 1fr;
             gap: 30px;
         }
         
-        /* Input Card */
         .input-card {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 30px;
             backdrop-filter: blur(10px);
+            max-height: 800px;
+            overflow-y: auto;
         }
         
         .section-header {
@@ -147,7 +147,8 @@
         }
         
         .form-group input,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             padding: 12px 14px;
             background: rgba(15, 23, 42, 0.8);
@@ -156,10 +157,17 @@
             color: #fff;
             font-size: 14px;
             transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         
         .form-group input:focus,
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
             background: rgba(15, 23, 42, 0.95);
@@ -179,7 +187,7 @@
             margin-top: 10px;
         }
         
-        .predict-btn:hover {
+        .predict-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
@@ -189,48 +197,24 @@
             cursor: not-allowed;
         }
         
-        /* Key Metrics */
-        .metrics-grid {
-            display: grid;
-            gap: 12px;
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .metric-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        
-        .metric-icon {
-            width: 18px;
-            height: 18px;
-            color: #667eea;
-            margin-top: 2px;
-        }
-        
-        .metric-content h4 {
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #818cf8;
             font-size: 13px;
-            color: #d1d5db;
-            margin-bottom: 2px;
-            font-weight: 500;
         }
         
-        .metric-content p {
-            font-size: 12px;
-            color: #6b7280;
+        .loading.active {
+            display: block;
         }
         
-        /* Result Card */
         .result-card {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 30px;
             backdrop-filter: blur(10px);
-            min-height: 600px;
         }
         
         #map {
@@ -304,6 +288,37 @@
             font-weight: 600;
         }
         
+        .distance-info {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .distance-info h4 {
+            color: #d1d5db;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        
+        .distance-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .distance-item {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        
+        .distance-item span {
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -330,37 +345,14 @@
             color: #fff;
         }
         
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 60px;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
-        }
-        
-        .footer-links a {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 13px;
-        }
-        
-        .footer p {
-            color: #4b5563;
-            font-size: 12px;
+        .leaflet-routing-container {
+            display: none;
         }
         
         @media (max-width: 1200px) {
             .container {
                 grid-template-columns: 1fr;
             }
-            
             .header {
                 padding: 20px 30px;
             }
@@ -368,7 +360,6 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
         <div class="logo">
             <div class="logo-icon">🚀</div>
@@ -382,16 +373,13 @@
         </nav>
     </div>
     
-    <!-- Hero Section -->
     <div class="hero">
         <div class="badge">🎯 AI-Powered Predictions</div>
         <h1>Delivery Time,<br>Predicted to Perfection</h1>
-        <p>Experience the future of food delivery with our LSTM neural network. Heal with thousands of data points to give you the most accurate delivery predictions.</p>
+        <p>Experience the future of food delivery with our LSTM neural network. Trained with thousands of data points to give you the most accurate delivery predictions.</p>
     </div>
     
-    <!-- Main Content -->
     <div class="container">
-        <!-- Input Card -->
         <div class="input-card">
             <div class="section-header">
                 <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,15 +406,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>City</label>
-                    <select id="city" required>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Chennai">Chennai</option>
-                    </select>
+                    <label>Restaurant Address</label>
+                    <textarea id="restaurantAddress" placeholder="e.g., 123, Koramangala 5th Block, Bangalore, Karnataka 560095" required></textarea>
                 </div>
                 
                 <div class="section-header" style="margin-top: 30px;">
@@ -437,8 +418,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Distance (km)</label>
-                    <input type="number" id="distance" min="0.5" max="15" step="0.1" value="3.5" required>
+                    <label>Delivery Address</label>
+                    <textarea id="deliveryAddress" placeholder="e.g., 456, Indiranagar 100 Feet Road, Bangalore, Karnataka 560038" required></textarea>
+                </div>
+                
+                <div class="section-header" style="margin-top: 30px;">
+                    <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    ORDER DETAILS
                 </div>
                 
                 <div class="form-group">
@@ -472,54 +460,11 @@
                     </select>
                 </div>
                 
-                <button type="submit" class="predict-btn">PREDICT DELIVERY TIME</button>
+                <button type="submit" class="predict-btn" id="predictBtn">CALCULATE & PREDICT</button>
+                <div class="loading" id="loadingMsg">🔄 Calculating distance and route...</div>
             </form>
-            
-            <!-- Key Metrics -->
-            <div class="metrics-grid">
-                <div class="metric-item">
-                    <svg class="metric-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="metric-content">
-                        <h4>Trained on 10,000+ Orders</h4>
-                        <p>Real Indian delivery data</p>
-                    </div>
-                </div>
-                
-                <div class="metric-item">
-                    <svg class="metric-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="metric-content">
-                        <h4>Accuracy: 89% R² Score</h4>
-                        <p>3 min average error</p>
-                    </div>
-                </div>
-                
-                <div class="metric-item">
-                    <svg class="metric-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="metric-content">
-                        <h4>API Response: <500ms</h4>
-                        <p>Lightning fast predictions</p>
-                    </div>
-                </div>
-                
-                <div class="metric-item">
-                    <svg class="metric-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="metric-content">
-                        <h4>Ensemble: LSTM + GBR</h4>
-                        <p>Best of both models</p>
-                    </div>
-                </div>
-            </div>
         </div>
         
-        <!-- Result Card -->
         <div class="result-card">
             <div class="section-header">
                 <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,7 +475,7 @@
             
             <div id="initialMessage" class="empty-state">
                 <div class="empty-icon">📍</div>
-                <p>Make a prediction to see the delivery route</p>
+                <p>Enter addresses to calculate distance and see delivery route</p>
             </div>
             
             <div id="predictionResult" class="prediction-result">
@@ -540,6 +485,18 @@
                     </div>
                     <div class="confidence-badge" id="confidenceBadge">
                         -- Confidence
+                    </div>
+                </div>
+                
+                <div class="distance-info">
+                    <h4>📏 Distance Information</h4>
+                    <div class="distance-grid">
+                        <div class="distance-item">
+                            Straight-line: <span id="straightDistance">--</span>
+                        </div>
+                        <div class="distance-item">
+                            Road distance: <span id="roadDistance">--</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -566,53 +523,124 @@
             </div>
         </div>
     </div>
-    
-    <!-- Footer -->
-    <div class="footer">
-        <div class="footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Help</a>
-        </div>
-        <p>© 2025 Givi. Powered by LSTM Neural Network</p>
-    </div>
 
     <script>
         let map;
-        let routeLayer;
+        let routingControl;
         
-        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            predictDeliveryTime();
+            await predictDeliveryTime();
         });
         
-        function predictDeliveryTime() {
+        async function geocodeAddress(address) {
+            // Using Nominatim (OpenStreetMap) for free geocoding
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    return {
+                        lat: parseFloat(data[0].lat),
+                        lon: parseFloat(data[0].lon),
+                        display_name: data[0].display_name
+                    };
+                }
+                return null;
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                return null;
+            }
+        }
+        
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        async function predictDeliveryTime() {
+            const btn = document.getElementById('predictBtn');
+            const loading = document.getElementById('loadingMsg');
+            
+            btn.disabled = true;
+            loading.classList.add('active');
+            
             const restaurant = document.getElementById('restaurant').value;
-            const city = document.getElementById('city').value;
-            const distance = parseFloat(document.getElementById('distance').value);
-            const orderValue = parseInt(document.getElementById('orderValue').value);
+            const restaurantAddr = document.getElementById('restaurantAddress').value;
+            const deliveryAddr = document.getElementById('deliveryAddress').value;
             const numItems = parseInt(document.getElementById('numItems').value);
+            const orderValue = parseInt(document.getElementById('orderValue').value);
             const weather = document.getElementById('weather').value;
             const traffic = document.getElementById('traffic').value;
             
-            const currentHour = new Date().getHours();
-            const prediction = calculateDeliveryTime(distance, weather, traffic, currentHour, numItems);
-            
-            document.getElementById('initialMessage').style.display = 'none';
-            document.getElementById('predictionResult').classList.add('active');
-            
-            animateValue('timeValue', 0, prediction.time, 1000);
-            
-            setTimeout(() => {
-                document.getElementById('confidenceBadge').textContent = prediction.confidence + '% Confidence';
-            }, 500);
-            
-            document.getElementById('weatherImpact').textContent = prediction.weatherImpact;
-            document.getElementById('trafficImpact').textContent = prediction.trafficImpact;
-            document.getElementById('distanceFactor').textContent = prediction.distanceFactor;
-            document.getElementById('peakHour').textContent = prediction.peakHour;
-            
-            updateMap(distance, city);
+            try {
+                // Geocode addresses
+                loading.textContent = '🔄 Finding restaurant location...';
+                const restCoords = await geocodeAddress(restaurantAddr);
+                
+                if (!restCoords) {
+                    alert('Could not find restaurant address. Please check and try again.');
+                    return;
+                }
+                
+                loading.textContent = '🔄 Finding delivery location...';
+                const delCoords = await geocodeAddress(deliveryAddr);
+                
+                if (!delCoords) {
+                    alert('Could not find delivery address. Please check and try again.');
+                    return;
+                }
+                
+                // Calculate distances
+                loading.textContent = '🔄 Calculating distance...';
+                const straightDist = calculateHaversineDistance(
+                    restCoords.lat, restCoords.lon,
+                    delCoords.lat, delCoords.lon
+                );
+                
+                // Estimate road distance (1.35x straight-line in urban areas)
+                const roadDist = straightDist * 1.35;
+                
+                // Calculate delivery time prediction
+                const currentHour = new Date().getHours();
+                const prediction = calculateDeliveryTime(roadDist, weather, traffic, currentHour, numItems);
+                
+                // Show results
+                document.getElementById('initialMessage').style.display = 'none';
+                document.getElementById('predictionResult').classList.add('active');
+                
+                animateValue('timeValue', 0, prediction.time, 1000);
+                
+                setTimeout(() => {
+                    document.getElementById('confidenceBadge').textContent = prediction.confidence + '% Confidence';
+                }, 500);
+                
+                document.getElementById('straightDistance').textContent = straightDist.toFixed(2) + ' km';
+                document.getElementById('roadDistance').textContent = roadDist.toFixed(2) + ' km';
+                document.getElementById('weatherImpact').textContent = prediction.weatherImpact;
+                document.getElementById('trafficImpact').textContent = prediction.trafficImpact;
+                document.getElementById('distanceFactor').textContent = prediction.distanceFactor;
+                document.getElementById('peakHour').textContent = prediction.peakHour;
+                
+                // Update map with routing
+                loading.textContent = '🔄 Drawing route on map...';
+                await updateMapWithRoute(restCoords, delCoords);
+                
+            } catch (error) {
+                console.error('Prediction error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
         }
         
         function calculateDeliveryTime(distance, weather, traffic, hour, items) {
@@ -673,60 +701,41 @@
             }, 16);
         }
         
-        function updateMap(distance, city) {
-            const cityCoords = {
-                'Mumbai': [19.0760, 72.8777],
-                'Delhi': [28.6139, 77.2090],
-                'Bangalore': [12.9716, 77.5946],
-                'Hyderabad': [17.3850, 78.4867],
-                'Pune': [18.5204, 73.8567],
-                'Chennai': [13.0827, 80.2707]
-            };
-            
-            const center = cityCoords[city] || [19.0760, 72.8777];
-            
+        async function updateMapWithRoute(restCoords, delCoords) {
             if (!map) {
-                map = L.map('map').setView(center, 13);
+                map = L.map('map').setView([restCoords.lat, restCoords.lon], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
             } else {
-                map.setView(center, 13);
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
             }
             
-            if (routeLayer) {
-                map.removeLayer(routeLayer);
-            }
-            
-            const startPoint = center;
-            const endPoint = [
-                center[0] + (Math.random() - 0.5) * distance * 0.015,
-                center[1] + (Math.random() - 0.5) * distance * 0.015
-            ];
-            
-            const restaurantIcon = L.divIcon({
-                html: '<div style="background: #667eea; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">🏪</div>',
-                className: '',
-                iconSize: [30, 30]
-            });
-            
-            const deliveryIcon = L.divIcon({
-                html: '<div style="background: #22c55e; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">📍</div>',
-                className: '',
-                iconSize: [30, 30]
-            });
-            
-            L.marker(startPoint, {icon: restaurantIcon}).addTo(map).bindPopup('<b>Restaurant</b>');
-            L.marker(endPoint, {icon: deliveryIcon}).addTo(map).bindPopup('<b>Delivery Location</b>');
-            
-            routeLayer = L.polyline([startPoint, endPoint], {
-                color: '#667eea',
-                weight: 4,
-                opacity: 0.8,
-                dashArray: '10, 10'
+            // Add routing with Leaflet Routing Machine (uses OSRM)
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(restCoords.lat, restCoords.lon),
+                    L.latLng(delCoords.lat, delCoords.lon)
+                ],
+                routeWhileDragging: false,
+                show: false,
+                addWaypoints: false,
+                lineOptions: {
+                    styles: [{color: '#667eea', opacity: 0.8, weight: 5}]
+                },
+                createMarker: function(i, waypoint, n) {
+                    const icon = L.divIcon({
+                        html: i === 0 ? 
+                            '<div style="background: #667eea; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">🏪</div>' :
+                            '<div style="background: #22c55e; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">📍</div>',
+                        className: '',
+                        iconSize: [30, 30]
+                    });
+                    return L.marker(waypoint.latLng, {icon: icon});
+                }
             }).addTo(map);
-            
-            map.fitBounds([startPoint, endPoint], {padding: [50, 50]});
         }
     </script>
 </body>
